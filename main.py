@@ -109,11 +109,9 @@ def main():
                         default=0.8, type=float)
     parser.add_argument('-model', help='Specify a new path for model', dest='model', type=str,
                         default='model/res101_faster_rcnn_iter_60000.ckpt')
-    parser.add_argument('-v', help='Visualize the result', action='store_true', dest='visualize')
 
     args = parser.parse_args()
 
-    assert os.path.exists(args.model), 'Could not find the pre-trained model, is it place right?'
     assert os.path.exists(args.input), 'The input path does not exists'
 
     if os.path.isdir(args.input):
@@ -151,16 +149,15 @@ def main():
             x1, y1, x2, y2 = boxes[i, :].tolist()
             result[file]['bbox'].append([x1, y1, x2, y2])
 
-            if args.visualize:
+            if args.output is None:
                 cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
-        if args.visualize:
+        if args.output is None:
             cv2.imshow(file, img)
 
     if args.output:
         with open(args.output, 'w') as f:
             json.dump(result, f)
-
-    if args.visualize:
+    else:
         cv2.waitKey()
 
 

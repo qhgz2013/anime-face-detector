@@ -11,7 +11,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
 - Python 3.6.x
 - tensorflow
 - opencv-python
-- Pre-trained [ResNet101](#Dependencies) model
+- Pre-trained ResNet101 model
 
 ## Usage
 1. Clone this repository
