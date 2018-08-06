@@ -22,30 +22,39 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
     Google Drive: [here](https://drive.google.com/open?id=1WjBgfOUqp4sdRd9BHs4TkdH2EcBtV5ri)    
     Baidu Netdisk: [here](https://pan.baidu.com/s/1bvpCp1sbD7t9qnta8IhpmA)  
 3. Unzip the model file into `model` directory
-4. Run the demo as you want  
-    1. Visualize the result (without output path):
+4. Build the CPU NMS model
+    ```bash
+    make clean
+    make
+    ```
+5. Run the demo as you want
+    - Visualize the result (without output path):
         ```bash
         python main.py -i /path/to/image.jpg
         ```
-    2. Save results to a json file
+    - Save results to a json file
         ```bash
         python main.py -i /path/to/image.jpg -o /path/to/output.json
         ```
         Sample output file:
         ```json
-        {"/path/to/image.jpg": {"score": 0.9999708, "bbox": [[551.3375, 314.50253, 729.2599, 485.25674]]}}
+        {"/path/to/image.jpg": [{"score": 0.9999708, "bbox": [551.3375, 314.50253, 729.2599, 485.25674]}]}
         ```
-    3. Detecting a whole directory with recursion
+    - Detecting a whole directory with recursion
         ```bash
         python main.py -i /path/to/dir -o /path/to/output.json
         ```
-    4. Customize threshold
+    - Customize threshold
         ```bash
         python main.py -i /path/to/image.jpg -nms 0.3 -conf 0.8
         ```
-    5. Customize model path
+    - Customize model path
         ```bash
-        python main.py -model /path/to/model.ckpt
+        python main.py -i /path/to/image.jpg -model /path/to/model.ckpt
+        ```
+    - Customize nms type (supports CPU_NMS and PY_NMS, not supports GPU_NMS because of the complicated build process for Windows platform)
+        ```bash
+        python main.py -i /path/to/image.jpg -nms-type PY_NMS
         ```
 
 ## Results

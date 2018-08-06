@@ -5,47 +5,12 @@ import tensorflow as tf
 import argparse
 import os
 import json
-
-
-def nms(boxes, scores, thresh):
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
-    x2 = boxes[:, 2]
-    y2 = boxes[:, 3]
-    areas = (x2 - x1 + 1) * (y2 - y1 + 1)
-    order = scores.argsort()[::-1]
-    num_boxes = boxes.shape[0]
-    suppressed = np.zeros([num_boxes], dtype=np.int32)
-
-    keep = []
-    for _i in range(num_boxes):
-        i = order[_i]
-        if suppressed[i] == 1:
-            continue
-        keep.append(i)
-        ix1 = x1[i]
-        iy1 = y1[i]
-        ix2 = x2[i]
-        iy2 = y2[i]
-        iarea = areas[i]
-        for _j in range(_i + 1, num_boxes):
-            j = order[_j]
-            if suppressed[j] == 1:
-                continue
-            xx1 = max(ix1, x1[j])
-            yy1 = max(iy1, y1[j])
-            xx2 = min(ix2, x2[j])
-            yy2 = min(iy2, y2[j])
-            w = max(0.0, xx2 - xx1 + 1)
-            h = max(0.0, yy2 - yy1 + 1)
-            inter = w * h
-            ovr = inter / (iarea + areas[j] - inter)
-            if ovr >= thresh:
-                suppressed[j] = 1
-    return keep
+import time
+from nms_wrapper import NMSType, NMSWrapper
 
 
 def detect(sess, rcnn_cls, image):
+    # pre-processing image for Faster-RCNN
     img_origin = image.astype(np.float32, copy=True)
     img_origin -= np.array([[[102.9801, 115.9465, 112.7717]]])
 
@@ -59,8 +24,11 @@ def detect(sess, rcnn_cls, image):
     img = cv2.resize(img_origin, None, None, img_scale, img_scale, cv2.INTER_LINEAR)
     img_info = np.array([img.shape[0], img.shape[1], img_scale], dtype=np.float32)
     img = np.expand_dims(img, 0)
+
+    # test image
     _, scores, bbox_pred, rois = rcnn_cls.test_image(sess, img, img_info)
 
+    # bbox transform
     boxes = rois[:, 1:] / img_scale
 
     boxes = boxes.astype(bbox_pred.dtype, copy=False)
@@ -81,6 +49,7 @@ def detect(sess, rcnn_cls, image):
     pred_boxes[:, 1::4] = pred_ctr_y - 0.5 * pred_h
     pred_boxes[:, 2::4] = pred_ctr_x + 0.5 * pred_w
     pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
+    # clipping edge
     pred_boxes[:, 0::4] = np.maximum(pred_boxes[:, 0::4], 0)
     pred_boxes[:, 1::4] = np.maximum(pred_boxes[:, 1::4], 0)
     pred_boxes[:, 2::4] = np.minimum(pred_boxes[:, 2::4], img_shape[1] - 1)
@@ -99,6 +68,18 @@ def load_file_from_dir(dir_path):
     return ret
 
 
+def fmt_time(dtime):
+    if dtime <= 0:
+        return '0:00.000'
+    elif dtime < 60:
+        return '0:%02d.%03d' % (int(dtime), int(dtime * 1000) % 1000)
+    elif dtime < 3600:
+        return '%d:%02d.%03d' % (int(dtime / 60), int(dtime) % 60, int(dtime * 1000) % 1000)
+    else:
+        return '%d:%02d:%02d.%03d' % (int(dtime / 3600), int((dtime % 3600) / 60), int(dtime) % 60,
+                                      int(dtime * 1000) % 1000)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Anime face detector demo')
     parser.add_argument('-i', help='The input path of an image or directory', required=True, dest='input', type=str)
@@ -109,6 +90,8 @@ def main():
                         default=0.8, type=float)
     parser.add_argument('-model', help='Specify a new path for model', dest='model', type=str,
                         default='model/res101_faster_rcnn_iter_60000.ckpt')
+    parser.add_argument('-nms-type', help='Type of nms', choices=['PY_NMS', 'CPU_NMS', 'GPU_NMS'], dest='nms_type',
+                        default='CPU_NMS')
 
     args = parser.parse_args()
 
@@ -118,6 +101,18 @@ def main():
         files = load_file_from_dir(args.input)
     else:
         files = [args.input]
+    file_len = len(files)
+
+    if args.nms_type == 'PY_NMS':
+        nms_type = NMSType.PY_NMS
+    elif args.nms_type == 'CPU_NMS':
+        nms_type = NMSType.CPU_NMS
+    elif args.nms_type == 'GPU_NMS':
+        nms_type = NMSType.GPU_NMS
+    else:
+        raise ValueError('Incorrect NMS Type, not supported yet')
+
+    nms = NMSWrapper(nms_type)
 
     cfg = tf.ConfigProto()
     cfg.gpu_options.allow_growth = True
@@ -130,28 +125,38 @@ def main():
 
     result = {}
 
-    for file in files:
+    time_start = time.time()
+
+    for idx, file in enumerate(files):
+        ellapsed = time.time() - time_start
+        eta = (file_len - idx) * ellapsed / idx if idx > 0 else 0
+        print('[%d/%d] Ellapsed: %s, ETA: %s >> %s' % (idx+1, file_len, fmt_time(ellapsed), fmt_time(eta), file))
         img = cv2.imread(file)
         scores, boxes = detect(sess, net, img)
         boxes = boxes[:, 4:8]
         scores = scores[:, 1]
-        keep = nms(boxes, scores, args.nms_thresh)
+        keep = nms(np.hstack([boxes, scores[:, np.newaxis]]).astype(np.float32), args.nms_thresh)
         boxes = boxes[keep, :]
         scores = scores[keep]
         inds = np.where(scores >= args.conf_thresh)[0]
         scores = scores[inds]
         boxes = boxes[inds, :]
 
-        result[file] = {}
-        result[file]['bbox'] = []
+        result[file] = []
         for i in range(scores.shape[0]):
-            result[file]['score'] = float(scores[i])
             x1, y1, x2, y2 = boxes[i, :].tolist()
-            result[file]['bbox'].append([x1, y1, x2, y2])
+            new_result = {'score': float(scores[i]),
+                          'bbox': [x1, y1, x2, y2]}
+            result[file].append(new_result)
 
             if args.output is None:
                 cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
-        if args.output is None:
+        if args.output:
+            if ((idx+1) % 1000) == 0:
+                # saving the temporary result
+                with open(args.output, 'w') as f:
+                    json.dump(result, f)
+        else:
             cv2.imshow(file, img)
 
     if args.output:
