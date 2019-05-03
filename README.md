@@ -11,6 +11,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
 - Python 3.6.x
 - tensorflow
 - opencv-python
+- cython
 - Pre-trained ResNet101 model
 
 ## Usage
@@ -22,7 +23,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
     Google Drive: [here](https://drive.google.com/open?id=1WjBgfOUqp4sdRd9BHs4TkdH2EcBtV5ri)    
     Baidu Netdisk: [here](https://pan.baidu.com/s/1bvpCp1sbD7t9qnta8IhpmA)  
 3. Unzip the model file into `model` directory
-4. Build the CPU NMS model
+4. Build the CPU NMS model (skip this step if use PY_NMS with argument: `-nms-type PY_NMS`)
     ```bash
     make clean
     make

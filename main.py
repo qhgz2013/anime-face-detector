@@ -128,9 +128,9 @@ def main():
     time_start = time.time()
 
     for idx, file in enumerate(files):
-        ellapsed = time.time() - time_start
-        eta = (file_len - idx) * ellapsed / idx if idx > 0 else 0
-        print('[%d/%d] Ellapsed: %s, ETA: %s >> %s' % (idx+1, file_len, fmt_time(ellapsed), fmt_time(eta), file))
+        elapsed = time.time() - time_start
+        eta = (file_len - idx) * elapsed / idx if idx > 0 else 0
+        print('[%d/%d] Elapsed: %s, ETA: %s >> %s' % (idx+1, file_len, fmt_time(elapsed), fmt_time(eta), file))
         img = cv2.imread(file)
         scores, boxes = detect(sess, net, img)
         boxes = boxes[:, 4:8]

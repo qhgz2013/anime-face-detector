@@ -11,6 +11,8 @@ import numpy as np
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
+import sys
+
 
 # Obtain the numpy include directory.  This logic works across numpy versions.
 try:
@@ -27,7 +29,7 @@ ext_modules = [
     Extension(
         "nms.cpu_nms",
         ["nms/cpu_nms.pyx"],
-        extra_compile_args={'gcc': ["-Wno-cpp", "-Wno-unused-function"]},
+        extra_compile_args=["-Wno-cpp", "-Wno-unused-function"] if sys.platform == 'linux' else [],
         include_dirs = [numpy_include]
     )
 ]
