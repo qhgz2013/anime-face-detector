@@ -1,17 +1,17 @@
 # Anime-Face-Detector
 A Faster-RCNN based anime face detector.
 
-This detector in trained on 6000 training samples and 641 testing samples, randomly selected from the dataset which is crawled from top 100 [pixiv daily ranking](https://www.pixiv.net/ranking.php?mode=daily).  
+This detector is trained on 6000 training samples and 641 testing samples, randomly selected from the dataset which is crawled from top 100 [pixiv daily ranking](https://www.pixiv.net/ranking.php?mode=daily).  
 
 Thanks to [OpenCV based Anime face detector](https://github.com/nagadomi/lbpcascade_animeface) written by nagadomi, which helps labelling the data. 
 
 The original implementation of Faster-RCNN using Tensorflow can be found [here](https://github.com/endernewton/tf-faster-rcnn)
 
 ## Dependencies
-- Python 3.6.x
-- tensorflow
-- opencv-python
-- cython
+- Python 3.6 or 3.7
+- `tensorflow` < 2.0
+- `opencv-python`
+- `cython` (optional, can be ignored with additional `-nms-type PY_NMS` argument)
 - Pre-trained ResNet101 model
 
 ## Usage
@@ -28,6 +28,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
     make clean
     make
     ```
+   If using Windows Power Shell, type `cmd /C make.bat` to run build script.
 5. Run the demo as you want
     - Visualize the result (without output path):
         ```bash
@@ -37,6 +38,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
         ```bash
         python main.py -i /path/to/image.jpg -o /path/to/output.json
         ```
+        Format: `{"image_path": [{"score": predicted_probability, "bbox": [min_x, min_y, max_x, max_y]}, ...], ...}`
         Sample output file:
         ```json
         {"/path/to/image.jpg": [{"score": 0.9999708, "bbox": [551.3375, 314.50253, 729.2599, 485.25674]}]}
@@ -69,3 +71,19 @@ Copyright info: [【C94】桜と刀](https://www.pixiv.net/member_illust.php?mod
 
 ![](./asset/sample3.png)
 Copyright info: [アイドルマスター　シンデレラガールズ](https://www.pixiv.net/member_illust.php?mode=medium&illust_id=69753772) by [我美蘭＠１日目 東A-40a](https://www.pixiv.net/member.php?id=2003931)
+
+## About training
+
+This model is directly trained by [Faster-RCNN](https://github.com/endernewton/tf-faster-rcnn), with following argument:
+```bash
+python tools/trainval_net.py --weight data/imagenet_weights/res101.ckpt --imdb voc_2007_trainval --imdbval voc_2007_test --iters 60000 --cfg experiments/cfgs/res101.yml --net res101 --set ANCHOR_SCALES "[4,8,16,32]" ANCHOR_RATIOS "[1]" TRAIN.STEPSIZE "[50000]"
+```
+
+## Dataset
+
+We've uploaded the dataset to Google drive [here](https://drive.google.com/open?id=1nDPimhiwbAWc2diok-6davhubNVe82pr), dataset structure is similar to VOC2007 (used in original Faster-RCNN implementation).
+
+## Citation and declaration
+
+Feel free to cite this repo and dataset.  
+This work is not related to my research team and lab, just my personal interest.
