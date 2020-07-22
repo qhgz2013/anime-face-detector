@@ -92,6 +92,9 @@ def main():
                         default='model/res101_faster_rcnn_iter_60000.ckpt')
     parser.add_argument('-nms-type', help='Type of nms', choices=['PY_NMS', 'CPU_NMS', 'GPU_NMS'], dest='nms_type',
                         default='CPU_NMS')
+    parser.add_argument('-crop-location', help='The output folder to place the cropped images', dest='crop_output_image_location')
+    parser.add_argument('-start-output', help='Start the numbering of the cropped images filename', dest='start_output_number', 
+                        default=0, type=int)
 
     args = parser.parse_args()
 
@@ -151,12 +154,18 @@ def main():
 
             if args.output is None:
                 cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
+
+            if args.crop_output_image_location:
+                cropped_image = img[int(y1):int(y2), int(x1):int(x2)]
+                cv2.imwrite(args.crop_output_image_location + str(args.start_output_number) + ".jpg", cropped_image)
+                args.start_output_number += 1
+
         if args.output:
             if ((idx+1) % 1000) == 0:
                 # saving the temporary result
                 with open(args.output, 'w') as f:
                     json.dump(result, f)
-        else:
+        elif args.crop_output_image_location is None:
             cv2.imshow(file, img)
 
     if args.output:
