@@ -63,6 +63,10 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
         ```bash
         python main.py -i /path/to/image/or/folder -crop-location /path/to/store/cropped/images -start-output 1
         ```
+    - Crop detected images and resizes them
+        ```bash
+        python main.py -i /path/to/image/or/folder -crop-location /path/to/store/cropped/images -crop_height 224 -crop_width 224
+        ```
 
 ## Results
 **Mean AP for this model: 0.9086**
