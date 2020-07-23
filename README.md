@@ -65,7 +65,7 @@ The original implementation of Faster-RCNN using Tensorflow can be found [here](
         ```
     - Crop detected images and resizes them
         ```bash
-        python main.py -i /path/to/image/or/folder -crop-location /path/to/store/cropped/images -crop_height 224 -crop_width 224
+        python main.py -i /path/to/image/or/folder -crop-location /path/to/store/cropped/images -crop-height 224 -crop-width 224
         ```
 
 ## Results
