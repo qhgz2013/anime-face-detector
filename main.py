@@ -95,6 +95,8 @@ def main():
     parser.add_argument('-crop-location', help='The output folder to place the cropped images', dest='crop_output_image_location')
     parser.add_argument('-start-output', help='Start the numbering of the cropped images filename', dest='start_output_number', 
                         default=0, type=int)
+    parser.add_argument('-crop-width', help='The width of images to crop', dest='crop_width', type=int)
+    parser.add_argument('-crop-height', help='The height of images to crop', dest='crop_height', type=int)
 
     args = parser.parse_args()
 
@@ -157,6 +159,12 @@ def main():
 
             if args.crop_output_image_location:
                 cropped_image = img[int(y1):int(y2), int(x1):int(x2)]
+
+                if args.crop_width and args.crop_height:
+                    cropped_image = cv2.resize(cropped_image, 
+                                              (args.crop_width, args.crop_height), 
+                                              interpolation = cv2.INTER_AREA)
+
                 cv2.imwrite(args.crop_output_image_location + str(args.start_output_number) + ".jpg", cropped_image)
                 args.start_output_number += 1
 
