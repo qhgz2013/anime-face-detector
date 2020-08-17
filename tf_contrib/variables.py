@@ -21,8 +21,8 @@ import functools
 import re
 
 from .arg_scope import add_arg_scope as contrib_add_arg_scope
-from . import gen_variable_ops
-from tensorflow.contrib.util import loader
+# from . import gen_variable_ops
+from . import loader
 from tensorflow.core.protobuf import saver_pb2
 from tensorflow.python import pywrap_tensorflow
 from tensorflow.python.framework import device as tf_device
@@ -88,7 +88,8 @@ def zero_initializer(ref, use_locking=True, name="zero_initializer"):
     return gen_variable_ops.zero_var_initializer(
         ref.handle, shape=ref.shape, dtype=ref.dtype, name=name)
   else:
-    return gen_variable_ops.zero_initializer(ref, name=name)
+    # return gen_variable_ops.zero_initializer(ref, name=name)
+    raise RuntimeError('gen_variable_ops is not implemented in this simplified version')
 
 
 @deprecated(None, 'Please switch to tf.train.assert_global_step')

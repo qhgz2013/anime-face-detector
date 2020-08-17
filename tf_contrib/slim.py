@@ -24,7 +24,7 @@ from __future__ import print_function
 # pylint: disable=unused-import,line-too-long,g-importing-member,wildcard-import
 # TODO(jart): Delete non-slim imports
 from .arg_scope import *
-from .variables import *
+# from .variables import *
 from .layers import *
 from .initializers import *
 from .regularizers import *
