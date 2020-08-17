@@ -1,7 +1,7 @@
-import tensorflow as tf
-from tensorflow.contrib.slim.python.slim.nets.resnet_v1 import resnet_v1_block, resnet_v1
-import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets.resnet_utils import arg_scope, conv2d_same
+from _tf_compat_import import compat_tensorflow as tf
+from tf_contrib.resnet_v1 import resnet_v1_block, resnet_v1
+import tf_contrib.slim as slim
+from tf_contrib.resnet_utils import arg_scope, conv2d_same
 import numpy as np
 
 
@@ -26,7 +26,7 @@ class FasterRCNNSlim:
 
         with arg_scope([slim.conv2d, slim.conv2d_in_plane, slim.conv2d_transpose, slim.separable_conv2d,
                         slim.fully_connected],
-                       weights_regularizer=tf.contrib.layers.l2_regularizer(0.0001),
+                       weights_regularizer=slim.l2_regularizer(0.0001),
                        biases_regularizer=tf.no_regularizer,
                        biases_initializer=tf.constant_initializer(0.0)):
             # in _build_network
@@ -44,8 +44,8 @@ class FasterRCNNSlim:
             with tf.variable_scope(self._scope, self._scope):
                 # in _anchor_component
                 with tf.variable_scope('ANCHOR-default'):
-                    height = tf.to_int32(tf.ceil(self._im_info[0] / 16.0))
-                    width = tf.to_int32(tf.ceil(self._im_info[1] / 16.0))
+                    height = tf.cast(tf.ceil(self._im_info[0] / 16.0), dtype=tf.int32)
+                    width = tf.cast(tf.ceil(self._im_info[1] / 16.0), dtype=tf.int32)
 
                     shift_x = tf.range(width) * 16
                     shift_y = tf.range(height) * 16
@@ -118,7 +118,7 @@ class FasterRCNNSlim:
                     proposals = tf.stack([b0, b1, b2, b3], axis=1)
                     indices = tf.image.non_max_suppression(proposals, scores, max_output_size=post_nms_topn,
                                                            iou_threshold=nms_thresh)
-                    boxes = tf.to_float(tf.gather(proposals, indices))
+                    boxes = tf.cast(tf.gather(proposals, indices), dtype=tf.float32)
                     # rpn_scores = tf.reshape(tf.gather(scores, indices), [-1, 1])
 
                     batch_inds = tf.zeros([tf.shape(indices)[0], 1], dtype=tf.float32)
@@ -128,14 +128,15 @@ class FasterRCNNSlim:
                 with tf.variable_scope('pool5'):
                     batch_ids = tf.squeeze(tf.slice(rois, [0, 0], [-1, 1], name='bath_id'), [1])
                     bottom_shape = tf.shape(net_conv)
-                    height = (tf.to_float(bottom_shape[1]) - 1) * 16.0
-                    width = (tf.to_float(bottom_shape[2]) - 1) * 16.0
+                    height = (tf.cast(bottom_shape[1], dtype=tf.float32) - 1) * 16.0
+                    width = (tf.cast(bottom_shape[2], dtype=tf.float32) - 1) * 16.0
                     x1 = tf.slice(rois, [0, 1], [-1, 1], name='x1') / width
                     y1 = tf.slice(rois, [0, 2], [-1, 1], name='y1') / height
                     x2 = tf.slice(rois, [0, 3], [-1, 1], name='x2') / width
                     y2 = tf.slice(rois, [0, 4], [-1, 1], name='y2') / height
                     bboxes = tf.stop_gradient(tf.concat([y1, x1, y2, x2], 1))
-                    pool5 = tf.image.crop_and_resize(net_conv, bboxes, tf.to_int32(batch_ids), [7, 7], name='crops')
+                    pool5 = tf.image.crop_and_resize(net_conv, bboxes, tf.cast(batch_ids, dtype=tf.int32), [7, 7], 
+                                                     name='crops')
             # in _head_to_tail
             with slim.arg_scope(self._resnet_arg_scope()):
                 fc7, _ = resnet_v1(pool5, self._blocks[-1:], global_pool=False, include_root_block=False,

@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 from faster_rcnn_wrapper import FasterRCNNSlim
-import tensorflow as tf
+from _tf_compat_import import compat_tensorflow as tf
 import argparse
 import os
 import json
