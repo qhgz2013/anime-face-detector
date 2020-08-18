@@ -8,9 +8,9 @@ Thanks to [OpenCV based Anime face detector](https://github.com/nagadomi/lbpcasc
 The original implementation of Faster-RCNN using Tensorflow can be found [here](https://github.com/endernewton/tf-faster-rcnn)
 
 ## Dependencies
-- Python 3.6 or 3.7
-- `tensorflow` < 2.0
-- `opencv-python`
+- Python >= 3.6
+- `tensorflow` latest 1.x or 2.x
+- `opencv-python` (Will use other packages like `pillow` and `scikit-image` as backend in future version)
 - `cython` (optional, can be ignored with additional `-nms-type PY_NMS` argument)
 - Pre-trained ResNet101 model
 
