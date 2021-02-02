@@ -154,7 +154,7 @@ def main():
                           'bbox': [x1, y1, x2, y2]}
             result[file].append(new_result)
 
-            if args.output is None:
+            if args.output is None and args.crop_output_image_location is None:
                 cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 0, 255), 2)
 
             if args.crop_output_image_location:
